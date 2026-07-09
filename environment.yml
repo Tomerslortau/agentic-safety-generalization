@@ -1,0 +1,19 @@
+name: agentic-safety-generalization
+channels:
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.10
+  - numpy
+  - scipy
+  - matplotlib
+  - pandas
+  - scikit-learn
+  - pytorch
+  - pip
+  - pip:
+      # quadcopter only
+      - torchdyn
+      # llm_crm training only (benchmark deps are documented in llm_crm/benchmark)
+      - transformers
+      - peft

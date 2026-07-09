@@ -1,0 +1,44 @@
+# Byte-compiled / caches
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Secrets — NEVER commit
+.env
+credentials.py
+*.key
+
+# Model weights / checkpoints (regenerate via training)
+*.pth
+*.pt
+*.safetensors
+*.ckpt
+
+# Generated data / experiment outputs (regenerate via the data-gen pipeline)
+data/
+runs/
+checkpoints/
+logs/
+results/
+*.log
+
+# Plots / build artifacts
+*.mp4
+*.aux
+*.fdb_latexmk
+*.fls
+texput.*
+
+# OS
+.DS_Store
+
+# Exceptions: keep the tiny committed samples
+!linear_lqr/data_sample/**
+!llm_crm/data_sample/**

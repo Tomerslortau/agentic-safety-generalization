@@ -1,0 +1,7 @@
+torch
+torchdyn
+numpy
+matplotlib
+pandas
+scikit-learn
+# GPUtil is optional (used only for GPU auto-selection; CPU works without it)

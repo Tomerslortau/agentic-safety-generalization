@@ -1,0 +1,8 @@
+# Dependencies for the CPU-runnable smoke path (linear_lqr + quadcopter smoke).
+# Each part also has its own requirements.txt with its full/optional deps.
+numpy
+scipy
+torch
+matplotlib
+pandas
+scikit-learn

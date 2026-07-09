@@ -1,0 +1,8 @@
+# Dependencies for the student training + evaluation + offline smoke test.
+numpy
+torch
+transformers
+peft
+# The benchmark harness (data collection / evaluation) has its own, heavier deps
+# (browsergym, playwright, gymnasium, openai, ...) — see benchmark/requirements.txt.
+# The offline test_smoke.py needs only the standard library.
