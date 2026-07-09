@@ -65,16 +65,27 @@ python ../training/evaluate_trained_model.py
 python ../training/create_experiments_results_per_seed.py
 ```
 
-## Offline smoke test (runs anywhere)
+## Smoke tests
 
+**Offline (runs anywhere, no weights/network):**
 ```bash
-python test_smoke.py     # CPU, no network/weights
+python test_smoke.py     # CPU, stdlib only
 ```
-It (a) loads `data_sample/sample_trajectories.json` and builds the (prompt,
-target-action) training examples the way `train_llama_il.py` does, (b) runs the
-exact-match accuracy logic on the sample, and (c) aggregates the sample per-seed
-metrics into a results table. This validates the data-formatting, evaluation, and
-aggregation code paths without the external stack.
+It (a) loads the sample trajectories and builds the (prompt, target-action) training
+examples the way `train_llama_il.py` does, (b) runs the exact-match accuracy logic on
+the sample, and (c) aggregates the sample per-seed metrics into a results table. This
+validates the data-formatting, evaluation, and aggregation code paths without the
+external stack.
+
+**With weights (actual student training + eval):**
+```bash
+LLAMA_PATH=/path/to/Llama-3.2-1B-Instruct python training/smoke_train_student.py
+```
+This uses the real `WebArenaTrajectoryDataset` + LoRA setup to fine-tune the student
+for a few steps on the sample trajectories and then greedy-decodes one example,
+verifying the training + decoding path end to end. It requires `transformers`, `peft`,
+and local LLaMA weights, and skips cleanly if any are missing. (A few steps on a couple
+of samples will not match the target — the goal is that the path runs, not accuracy.)
 
 ## Security note
 The real `credentials.py` and `.env` from the source tree are **not** included (they
