@@ -324,7 +324,9 @@ def main():
     args = parse_arguments()
     update_config_from_args(args)
 
-    seeds = [0, 1, 2]
+    # Seeds to average the student over (override with QUAD_SEEDS="0,1,2").
+    seeds_env = os.environ.get("QUAD_SEEDS")
+    seeds = [int(s) for s in seeds_env.split(",")] if seeds_env else [0, 1, 2]
     v_tr, v_va, r_tr, r_va = [], [], [], []
 
     for seed in seeds:
