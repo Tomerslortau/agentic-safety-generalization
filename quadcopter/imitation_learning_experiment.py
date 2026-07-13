@@ -241,15 +241,24 @@ def train_imitation_model(train_dataset, val_dataset, model_name, device, num_ep
         
         train_losses.append(train_loss / len(train_loader))
         val_losses.append(val_loss / len(val_loader))
-        
+
         # Update learning rate scheduler
         scheduler.step(val_losses[-1])
         current_lr = optimizer.param_groups[0]['lr']
         learning_rates.append(current_lr)
-        
+
         if epoch % 10 == 0:
             print(f"Epoch {epoch}: Train Loss = {train_losses[-1]:.6f}, Val Loss = {val_losses[-1]:.6f}, LR = {current_lr:.2e}")
-    
+
+        # Early stop once the student has fit the training demonstrations. The paper
+        # trains each student to train loss <= 1e-5 (only seeds where BOTH the safe and
+        # unsafe students reach this are retained), which is what makes the Theta_train
+        # errors comparable across teachers. Set QUAD_STUDENT_STOP=0 to disable.
+        stop_threshold = float(os.environ.get("QUAD_STUDENT_STOP", "1e-5"))
+        if stop_threshold > 0 and train_losses[-1] < stop_threshold:
+            print(f"Epoch {epoch}: train loss {train_losses[-1]:.3e} < {stop_threshold:.0e}; stopping.")
+            break
+
     return model, train_losses, val_losses, learning_rates
 
 def run_one_seed(base_args, seed):
@@ -305,11 +314,13 @@ def run_one_seed(base_args, seed):
     print_action_stats("Robust val", rv_act)
 
     # Train imitation models
+    # Train the student to convergence (paper: up to 20k epochs, stop at train<=1e-5).
+    student_epochs = int(os.environ.get("QUAD_STUDENT_EPOCHS", 20000))
     _, vanilla_train_losses, vanilla_val_losses, _ = train_imitation_model(
-        vanilla_train_dataset, vanilla_val_dataset, "Vanilla", device, num_epochs=300
+        vanilla_train_dataset, vanilla_val_dataset, "Vanilla", device, num_epochs=student_epochs
     )
     _, robust_train_losses, robust_val_losses, _ = train_imitation_model(
-        robust_train_dataset, robust_val_dataset, "Robust", device, num_epochs=300
+        robust_train_dataset, robust_val_dataset, "Robust", device, num_epochs=student_epochs
     )
 
     return (
