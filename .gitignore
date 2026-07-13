@@ -42,3 +42,6 @@ texput.*
 # Exceptions: keep the tiny committed samples
 !linear_lqr/data_sample/**
 !llm_crm/data_sample/**
+
+# quadcopter runtime trajectory dumps
+trajectory_*.csv
