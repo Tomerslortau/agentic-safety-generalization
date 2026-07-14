@@ -284,5 +284,6 @@ if __name__ == '__main__':
     args = parse_arguments(parser)
     args.env_id = STWEBAGENTBENCH
     args.specific_tasks_range = "47-47"
-    args.model_name = "gpt-4o"
+    # Planner/actor need a GPT-5-class model (reasoning.effort); paper uses GPT-5.2.
+    args.model_name = os.environ.get("AGENT_MODEL", "gpt-5.2")
     main_sync(args)

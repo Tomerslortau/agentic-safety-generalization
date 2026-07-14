@@ -852,7 +852,9 @@ def main():
             "--disable-software-rasterizer",
         ],
     )
-    agent = DemoAgentArgs(model_name="gpt-4o").make_agent()
+    # The planner/actor use the Responses API with reasoning.effort, which requires a
+    # GPT-5-class model (the paper uses GPT-5.2). Override with the AGENT_MODEL env var.
+    agent = DemoAgentArgs(model_name=os.environ.get("AGENT_MODEL", "gpt-5.2")).make_agent()
     obs, info = env.reset()
     done = False
     violated_policies = []
