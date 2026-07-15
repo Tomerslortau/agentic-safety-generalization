@@ -1,11 +1,6 @@
 # Why Does Agentic Safety Fail to Generalize Across Tasks?
 
-Official implementation for the experiments in [Why Does Agentic Safety Fail to Generalize Across Tasks?](https://arxiv.org/abs/2605.06992), based on the [PyTorch](https://pytorch.org/), [SciPy](https://scipy.org/), [Torchdyn](https://github.com/DiffEqML/torchdyn), and [Hugging Face Transformers](https://github.com/huggingface/transformers) libraries.
-
-<br>
-<p align="center">
-  <img src="figs/lipschitz_ratio_n4.png" alt="" width="750"/>
-</p>
+Official implementation for the experiments in [Why Does Agentic Safety Fail to Generalize Across Tasks?](https://arxiv.org/abs/2605.06992).
 
 We provide theoretical and empirical evidence that incorporating safety requirements makes generalization across tasks fundamentally harder, even in settings where imitating a teacher on tasks seen in training is essentially unaffected. The repository reproduces our experiments across three settings:
 
