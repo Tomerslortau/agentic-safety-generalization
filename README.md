@@ -54,7 +54,42 @@ pip install -r requirements.txt          # runnable smoke path (CPU)
 bash run_smoke_tests.sh                   # runs each part's smoke test
 ```
 
-See each part's `README.md` for full reproduction commands.
+## Reproducing the results
+
+Each part's `README.md` has the full commands and hyperparameters; the essentials:
+
+**Linear-quadratic** — main figure + linear table rows (CPU/GPU, deterministic):
+```bash
+cd linear_lqr/lipschitz_experiment                 # main figure: Lipschitz ratio > 1
+python run_experiment.py --n 4 --experiment-type general
+python run_experiment.py --n 4 --experiment-type commuting --alignment-constant 0.9
+python plot_emp_ratio.py --n 4 --comparison        # -> figures/comparison_emp_ratio_n=4.png
+cd ../imitation_experiment                          # linear table rows (safe vs unsafe)
+python generate_database.py --seeds 14 --dimensions 10 --systems-per-n2 800
+python train_value.py --dim 10 --seed 14 --variant hinf --num-layers 3 --activation gelu --use-layernorm
+python train_value.py --dim 10 --seed 14 --variant lqr  --num-layers 3 --activation gelu --use-layernorm
+```
+
+**Quadcopter** — quadcopter table rows (needs a GPU + `torchdyn`):
+```bash
+cd quadcopter
+python main.py --seed 42                            # STEP 1: train safe + unsafe teachers
+python imitation_learning_experiment.py --teacher-dir results/seed=42_quadcopter   # STEP 2: students
+```
+
+**LLM / CRM** — needs the external stack (SuiteCRM + GPT-5.2 + LLaMA). One trajectory:
+```bash
+cd llm_crm/benchmark
+docker compose -f suitecrm_setup/docker-compose.yaml up -d      # SuiteCRM at :8080
+Xvfb :99 -screen 0 1920x1080x24 -ac &                           # virtual display
+make install                                                   # pip install -e the plugin; also: playwright install chromium
+export OPENAI_API_KEY=...  WA_SUITECRM=http://localhost:8080  WA_GITLAB=http://localhost:8023  DISPLAY=:99
+python st_bench_example.py                                      # GPT-5.2 agent runs one SuiteCRM task
+# full pipeline: ../data_generation/collect_trajectories.py [--safe]  then  ../training/train_llama_il.py
+```
+See `llm_crm/README.md` and `llm_crm/benchmark/README.md` for full setup.
+
+**Smoke tests** (fast, no external services): `bash run_smoke_tests.sh`.
 
 ## Data & weights
 
