@@ -123,3 +123,37 @@ def select_config(experiment_type: str) -> ExperimentConfig:
     if experiment_type == "commuting":
         return config_commuting()
     raise ValueError(f"Unknown experiment type: {experiment_type}")
+
+
+# ── Generic random systems (current experiment; the configs above are legacy) ─
+
+GENERAL_SYSTEMS_HINF_TOL_GAMMA = 1e-4
+GENERAL_SYSTEMS_REQUIRE_STABLE = True
+GENERAL_SYSTEMS_RESULTS_DIR = "general_systems_results"
+
+
+def general_systems_search_kwargs(tol_gamma: float = GENERAL_SYSTEMS_HINF_TOL_GAMMA,
+                                  require_stable: bool = GENERAL_SYSTEMS_REQUIRE_STABLE) -> dict:
+    """Gamma-search kwargs for the general-systems experiment."""
+    kwargs = hinf_search_kwargs()
+    kwargs.update(tol_rel=tol_gamma, require_closed_loop_stable=require_stable)
+    return kwargs
+
+
+@dataclass
+class GeneralSystemsConfig:
+    dims: List[int] = field(default_factory=lambda: [4, 8])
+    norm_A_list: List[float] = field(default_factory=lambda: [0.1, 0.3, 0.5, 0.7])
+    norm_B_list: List[float] = field(default_factory=lambda: [0.3, 0.6, 0.9])
+    norm_Rinv_list: List[float] = field(default_factory=lambda: [1.0, 2.0])
+    norm_D: float = 1.0
+    n_seeds: int = N_SEEDS
+    base_seed: int = BASE_SEED
+    rank_one_epsilons: List[float] = field(default_factory=lambda: [1e-3, 1e-2])
+    q_min_eig_lqr: float = Q_MIN_EIG_LQR
+    q_min_eig_hinf: float = Q_MIN_EIG_HINF
+    tasks_per_batch: int = 0  # 0 means num_Q_for_dim(m)
+    block_size: int = 2000
+
+    def n_per_batch(self, m: int) -> int:
+        return self.tasks_per_batch if self.tasks_per_batch > 0 else num_Q_for_dim(m)

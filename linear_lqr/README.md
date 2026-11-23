@@ -32,9 +32,13 @@ core/            shared numerics (imported by both sub-experiments)
   systems.py     system draws + PSD task-matrix (Q) sampling
   lipschitz.py   empirical Lipschitz-constant estimator
 lipschitz_experiment/   -> the paper's MAIN FIGURE
-  config.py      explicit general/commuting configs (no runtime module aliasing)
-  experiments.py run_experiment(n, cfg) -> DataFrame of L(K_hinf)/L(K_lqr)
-  run_experiment.py, plot_emp_ratio.py, plotting.py
+  config.py      experiment configs (no runtime module aliasing)
+  general_systems.py, general_experiment.py, lipschitz_estimators.py
+                 generic random systems, one-system run, pairwise + Jacobian estimators
+  run_general_systems.py, collect_general_systems.py,
+  summarize_general_systems.py, plot_general_systems.py    current pipeline
+  experiments.py, run_experiment.py, plot_emp_ratio.py     legacy (commuting), unused
+  plotting.py    shared plot style
 imitation_experiment/   -> the paper's LINEAR TABLE rows
   generate_database.py   deterministic data generation
   model.py               ResidualMLP student
@@ -47,12 +51,13 @@ test_smoke.py    fast CPU smoke test of the whole part
 
 ## Reproduce
 
-**Main figure (Lipschitz ratio).** CPU-only, NumPy/SciPy. Dimension 4 as in the paper:
+**Main figure (Lipschitz ratio).** CPU-only, NumPy/SciPy. Dimensions 4 and 8, generic random systems:
 ```bash
 cd lipschitz_experiment
-python run_experiment.py --n 4 --experiment-type general
-python run_experiment.py --n 4 --experiment-type commuting --alignment-constant 0.9
-python plot_emp_ratio.py --n 4 --comparison        # -> figures/comparison_emp_ratio_n=4.png
+python run_general_systems.py --out-dir <dir> --workers <n>   # resumable, about 34 core-hours
+python collect_general_systems.py --out-dir <dir>             # -> general_systems_results/general_systems_m={4,8}.csv
+python summarize_general_systems.py                           # checks and headline numbers
+python plot_general_systems.py                                # -> figures/general_systems_{ratio,breakdown_m=4,breakdown_m=8}.{pdf,png}
 ```
 
 **Linear table rows (imitation).** GPU recommended. Data generation is deterministic:
@@ -82,7 +87,8 @@ python test_smoke.py     # CPU, seconds
   single implementation. Two historical behaviours are preserved as flags:
   `on_infeasible` ("raise" drops infeasible tasks in data-gen; "fallback_lqr" is used
   by the Lipschitz experiment) and `require_closed_loop_stable` (the imitation
-  experiment rejects non-stabilizing DGARE fixed points; the Lipschitz config keeps
-  the original non-rejecting behaviour to reproduce the published figure).
+  experiment and the current Lipschitz pipeline reject non-stabilizing DGARE fixed
+  points; the legacy Lipschitz config keeps the original non-rejecting behaviour).
 - The original Lipschitz code selected its config by swapping `sys.modules` at
-  runtime; here the config is two explicit objects (`config.select_config`).
+  runtime; here the configs are explicit objects (`config.select_config`,
+  `config.GeneralSystemsConfig`).

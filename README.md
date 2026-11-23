@@ -31,26 +31,17 @@ This setting mirrors our theoretical analysis. The unsafe target mapping is the 
 
 ### 1.1 Lipschitz Separation (Figure 1)
 
-The following command estimates the empirical Lipschitz constants of the safe and unsafe controller mappings and their ratio `Lip(K_hinf) / Lip(K_lqr)`, for a given dimension and system distribution:
+The following commands estimate the Lipschitz constants of the safe and unsafe controller mappings and their ratio `Lip(K_hinf) / Lip(K_lqr)` on generic random systems, for dimensions 4 and 8 over the full grid of 120 systems per dimension, and produce Figure 1 and its appendix breakdowns:
 
 ```
 cd linear_lqr/lipschitz_experiment
-python run_experiment.py --n <dim> --experiment-type <general|commuting> [--alignment-constant 0.9]
+python run_general_systems.py --out-dir <dir> --workers <n>   # resumable, about 34 core-hours
+python collect_general_systems.py --out-dir <dir>             # -> general_systems_results/general_systems_m={4,8}.csv
+python summarize_general_systems.py                           # checks and headline numbers
+python plot_general_systems.py                                # -> figures/general_systems_{ratio,breakdown_m=4,breakdown_m=8}.{pdf,png}
 ```
 
-For reproducing the experiments in the paper, run the above command with each of the settings below.
-
-| Experiment                                         | Command                                                                        |
-|----------------------------------------------------|--------------------------------------------------------------------------------|
-| Dimension 4, assumptions met (Figure 1, left)      | ```python run_experiment.py --n 4 --experiment-type commuting --alignment-constant 0.9``` |
-| Dimension 4, assumptions violated (Figure 1, right)| ```python run_experiment.py --n 4 --experiment-type general```                 |
-| Dimension 8 (Appendix)                             | same two commands with ```--n 8```                                             |
-
-The comparison figure is then produced by:
-
-```
-python plot_emp_ratio.py --n 4 --comparison        # -> figures/comparison_emp_ratio_n=4.png
-```
+Finished systems are skipped on restart, and several machines sharing `<dir>` can work through the same grid. Add `--dims 4` to run a single dimension. The earlier commuting-system experiment (`run_experiment.py`, `plot_emp_ratio.py`) is kept for reference and is no longer used.
 
 ### 1.2 Imitation Learning (Table 1, top rows)
 
