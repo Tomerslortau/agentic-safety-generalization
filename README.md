@@ -41,7 +41,7 @@ python summarize_general_systems.py                           # checks and headl
 python plot_general_systems.py                                # -> figures/general_systems_{ratio,breakdown_m=4,breakdown_m=8}.{pdf,png}
 ```
 
-Finished systems are skipped on restart, and several machines sharing `<dir>` can work through the same grid. Add `--dims 4` to run a single dimension. The earlier commuting-system experiment (`run_experiment.py`, `plot_emp_ratio.py`) is kept for reference and is no longer used.
+Finished systems are skipped on restart, and several machines sharing `<dir>` can work through the same grid. Add `--dims 4` to run a single dimension.
 
 ### 1.2 Imitation Learning (Table 1, top rows)
 

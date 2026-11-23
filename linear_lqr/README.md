@@ -37,7 +37,7 @@ lipschitz_experiment/   -> the paper's MAIN FIGURE
                  generic random systems, one-system run, pairwise + Jacobian estimators
   run_general_systems.py, collect_general_systems.py,
   summarize_general_systems.py, plot_general_systems.py    current pipeline
-  experiments.py, run_experiment.py, plot_emp_ratio.py     legacy (commuting), unused
+  experiments.py legacy run_experiment(n, cfg), used by test_smoke.py
   plotting.py    shared plot style
 imitation_experiment/   -> the paper's LINEAR TABLE rows
   generate_database.py   deterministic data generation
