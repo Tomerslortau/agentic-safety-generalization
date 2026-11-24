@@ -30,7 +30,6 @@ tasks (unseen `Q`) worse when imitating the safe teacher.
 core/            shared numerics (imported by both sub-experiments)
   solvers.py     solve_lqr (DARE) + solve_dgare / find_hinf_gain (DGARE γ-search)
   systems.py     system draws + PSD task-matrix (Q) sampling
-  lipschitz.py   empirical Lipschitz-constant estimator
 lipschitz_experiment/   -> the paper's MAIN FIGURE
   config.py          experiment grid and solver settings
   experiment.py      random systems, Lipschitz estimators, one-system run

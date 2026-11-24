@@ -26,12 +26,10 @@ explicit flags rather than silently picking one:
   * ``on_infeasible`` — when no feasible gamma is found for a task:
         "raise"        (imitation experiment) so the task is dropped from the dataset;
         "fallback_lqr" (Lipschitz experiment) returns K_lqr with gamma = NaN.
-  * ``require_closed_loop_stable`` — the imitation experiment rejected non-stabilizing
-        DGARE fixed points (``A + B K`` spectral radius >= 1); the Lipschitz experiment
-        did not. Default True (the stricter, more correct behaviour); the Lipschitz
-        config passes False to reproduce the published figure exactly.
+  * ``require_closed_loop_stable`` — reject non-stabilizing DGARE fixed points
+        (``A + B K`` spectral radius >= 1). Default True; both experiments use it.
 
-Tolerances are parameters too (imitation used HINF_TOL_P=1e-10, Lipschitz 1e-6).
+Tolerances are parameters too (imitation uses HINF_TOL_P=1e-10, Lipschitz 1e-6).
 NumPy + SciPy only.
 """
 
@@ -70,11 +68,6 @@ def solve_lqr(A, B, Q, R):
     P = sym(solve_discrete_are(A, B, Q, R))
     K = -np.linalg.solve(R + B.T @ P @ B, B.T @ P @ A)
     return P, K
-
-
-def compute_K_lqr(A, B, Q, R):
-    """Convenience wrapper returning only the LQR gain K."""
-    return solve_lqr(A, B, Q, R)[1]
 
 
 # ── H-infinity joint block-H fixed-point iteration ──────────────────────────────
@@ -249,7 +242,3 @@ def find_hinf_gain(A, B, D, Q, R, **search_kwargs):
     """
     K, _ = compute_K_hinf(A, B, D, Q, R, on_infeasible="raise", **search_kwargs)
     return K
-
-
-# Backward-compatible alias (same signature as the original).
-lqr_dare = solve_lqr
