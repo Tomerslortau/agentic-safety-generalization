@@ -21,7 +21,7 @@ from generate_database import generate
 from train_policy import load_dataset, train_model, normalize_mse, run_job, DEFAULTS
 
 import config as lip_config
-from experiments import run_experiment
+from experiment import build_jobs, run_system
 
 
 SMOKE_DATA = os.path.join(HERE, 'data_smoke')
@@ -130,23 +130,13 @@ def test_train_pipeline():
 
 def test_lipschitz_ratio():
     """Tiny end-to-end Lipschitz-ratio run: finite ratio on a single grid point."""
-    orig_num_Q = lip_config.num_Q_for_dim
-    lip_config.num_Q_for_dim = lambda n: 15  # shrink for speed
-    try:
-        cfg = lip_config.select_config('general')
-        cfg.n_seeds = 1
-        cfg.NORM_A_LIST = [0.2]
-        cfg.NORM_B_LIST = [0.5]
-        cfg.MIN_EIG_R_LIST = [1]
-        cfg.NORM_D_LIST = [1]
-        cfg.verbose_outer = False
-        df = run_experiment(2, cfg)
-    finally:
-        lip_config.num_Q_for_dim = orig_num_Q
-    assert len(df) == 1
-    row = df.iloc[0]
-    assert np.isfinite(row['L_lqr_emp']) and np.isfinite(row['L_hinf_emp'])
-    ratio = row['L_hinf_emp'] / row['L_lqr_emp']
+    cfg = lip_config.Config(dims=[2], norm_A=[0.2], norm_B=[0.5], norm_Rinv=[1.0],
+                            n_seeds=1, tasks_per_batch=15)
+    jobs = build_jobs(cfg)
+    assert len(jobs) == 1
+    row = run_system(jobs[0], cfg)
+    assert np.isfinite(row['L_unsafe']) and np.isfinite(row['L_safe'])
+    ratio = row['ratio']
     assert np.isfinite(ratio) and ratio > 0
     print(f"PASS: test_lipschitz_ratio (L_hinf/L_lqr = {ratio:.3f})")
 

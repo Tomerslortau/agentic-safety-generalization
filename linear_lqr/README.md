@@ -32,13 +32,10 @@ core/            shared numerics (imported by both sub-experiments)
   systems.py     system draws + PSD task-matrix (Q) sampling
   lipschitz.py   empirical Lipschitz-constant estimator
 lipschitz_experiment/   -> the paper's MAIN FIGURE
-  config.py      experiment configs (no runtime module aliasing)
-  general_systems.py, general_experiment.py, lipschitz_estimators.py
-                 generic random systems, one-system run, pairwise + Jacobian estimators
-  run_general_systems.py, collect_general_systems.py,
-  summarize_general_systems.py, plot_general_systems.py    current pipeline
-  experiments.py legacy run_experiment(n, cfg), used by test_smoke.py
-  plotting.py    shared plot style
+  config.py          experiment grid and solver settings
+  experiment.py      random systems, Lipschitz estimators, one-system run
+  run_experiment.py  runs the grid (resumable)
+  analyze.py         merges results, runs the checks, makes the figures
 imitation_experiment/   -> the paper's LINEAR TABLE rows
   generate_database.py   deterministic data generation
   model.py               ResidualMLP student
@@ -54,10 +51,8 @@ test_smoke.py    fast CPU smoke test of the whole part
 **Main figure (Lipschitz ratio).** CPU-only, NumPy/SciPy. Dimensions 4 and 8, generic random systems:
 ```bash
 cd lipschitz_experiment
-python run_general_systems.py --out-dir <dir> --workers <n>   # resumable, about 34 core-hours
-python collect_general_systems.py --out-dir <dir>             # -> general_systems_results/general_systems_m={4,8}.csv
-python summarize_general_systems.py                           # checks and headline numbers
-python plot_general_systems.py                                # -> figures/general_systems_{ratio,breakdown_m=4,breakdown_m=8}.{pdf,png}
+python run_experiment.py --out-dir <dir> --workers <n>   # resumable, about 34 core-hours
+python analyze.py --out-dir <dir>                        # -> results/ (CSVs, checks) and figures/
 ```
 
 **Linear table rows (imitation).** GPU recommended. Data generation is deterministic:
@@ -86,9 +81,7 @@ python test_smoke.py     # CPU, seconds
 - The two original code trees duplicated the LQR/H∞ solvers; `core/solvers.py` is the
   single implementation. Two historical behaviours are preserved as flags:
   `on_infeasible` ("raise" drops infeasible tasks in data-gen; "fallback_lqr" is used
-  by the Lipschitz experiment) and `require_closed_loop_stable` (the imitation
-  experiment and the current Lipschitz pipeline reject non-stabilizing DGARE fixed
-  points; the legacy Lipschitz config keeps the original non-rejecting behaviour).
+  by the Lipschitz experiment) and `require_closed_loop_stable` (both
+  experiments reject non-stabilizing DGARE fixed points).
 - The original Lipschitz code selected its config by swapping `sys.modules` at
-  runtime; here the configs are explicit objects (`config.select_config`,
-  `config.GeneralSystemsConfig`).
+  runtime; here the config is an explicit object (`config.Config`).

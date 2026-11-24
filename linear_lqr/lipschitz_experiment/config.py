@@ -1,159 +1,34 @@
-"""Configuration for the Lipschitz-ratio experiment.
+"""Configuration of the Lipschitz experiment (Section 4.1)."""
 
-This replaces the original ``common.config`` dynamic-module-alias mechanism (where
-``select_config`` swapped ``sys.modules["common.config"]`` at runtime) with plain
-module-level constants and two explicit ``ExperimentConfig`` objects. Callers pass a
-config object to ``run_experiment(n, cfg)`` and the plotting functions.
-"""
-
-import os
 from dataclasses import dataclass, field
 from typing import List
 
-
-# ── Constants shared by all Lipschitz experiments ─────────────────────────────
-Q_MIN_EIG_LQR = 0.0
-Q_MIN_EIG_HINF = 1e-1
-
-N_SEEDS = 5
-BASE_SEED = 42
-
-EPS = 1e-12
-FIGURES_DIR = "figures"
-
-# Solver hyperparameters (looser than the imitation experiment's, matching the
-# original Lipschitz configuration).
-LQR_TOL = 1e-6
-LQR_MAX_ITER = 500
-HINF_TOL_P = 1e-6
-HINF_MAX_ITER_P = 500
-HINF_TOL_GAMMA = 1e-2
-HINF_MAX_ITER_GAMMA = 100
-HINF_GAMMA_INIT = 1e-2
-HINF_GAMMA_MAX = 1e5
-HINF_GAMMA_BRACKET = 10.0
-
-# The original Lipschitz experiment did NOT reject non-stabilizing DGARE fixed
-# points; keep that behaviour to reproduce the published figure exactly.
-REQUIRE_CLOSED_LOOP_STABLE = False
-
-# Default alignment constant used when plotting legacy commuting files.
-ALIGNMENT_CONSTANT = 0.9
-
-RESULTS_GENERAL_CSV_TEMPLATE = "results/experiments_general_n={}.csv"
-RESULTS_COMMUTING_CSV_TEMPLATE = "results/experiments_commuting_n={}.csv"
-THEORY_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-def num_Q_for_dim(n: int) -> int:
-    return 100 * n ** 2
-
-
-def results_csv_template(experiment_type: str) -> str:
-    if experiment_type == "general":
-        return RESULTS_GENERAL_CSV_TEMPLATE
-    if experiment_type == "commuting":
-        return RESULTS_COMMUTING_CSV_TEMPLATE
-    raise ValueError(f"Unknown experiment type: {experiment_type}")
-
-
-def resolve_theory_path(path: str) -> str:
-    if os.path.isabs(path):
-        return path
-    return os.path.join(THEORY_DIR, path)
-
-
-def hinf_search_kwargs() -> dict:
-    """Solver kwargs passed to core.solvers.compute_K_hinf for this experiment."""
-    return dict(
-        gamma_floor=HINF_GAMMA_INIT,
-        gamma_cap=HINF_GAMMA_MAX,
-        bracket_factor=HINF_GAMMA_BRACKET,
-        tol_rel=HINF_TOL_GAMMA,
-        max_bisect=HINF_MAX_ITER_GAMMA,
-        tol_p=HINF_TOL_P,
-        maxit_p=HINF_MAX_ITER_P,
-        require_closed_loop_stable=REQUIRE_CLOSED_LOOP_STABLE,
-    )
-
-
-# ── Per-experiment configuration objects (no dynamic module aliasing) ─────────
-
-@dataclass
-class ExperimentConfig:
-    experiment_type: str
-    NORM_A_LIST: List[float]
-    NORM_B_LIST: List[float]
-    MIN_EIG_R_LIST: List[float]
-    NORM_D_LIST: List[float]
-    alignment_constant: float = ALIGNMENT_CONSTANT
-    n_seeds: int = N_SEEDS
-    base_seed: int = BASE_SEED
-    q_min_eig_lqr: float = Q_MIN_EIG_LQR
-    q_min_eig_hinf: float = Q_MIN_EIG_HINF
-    verbose_outer: bool = True
-    verbose_inner: bool = False
-
-
-def config_general() -> ExperimentConfig:
-    return ExperimentConfig(
-        experiment_type="general",
-        NORM_A_LIST=[0.1, 0.4, 0.7],
-        NORM_B_LIST=[0.3, 0.6, 0.9],
-        MIN_EIG_R_LIST=[1, 2],
-        NORM_D_LIST=[1],
-    )
-
-
-def config_commuting() -> ExperimentConfig:
-    return ExperimentConfig(
-        experiment_type="commuting",
-        NORM_A_LIST=[0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4],
-        NORM_B_LIST=[0.5],
-        MIN_EIG_R_LIST=[1],
-        NORM_D_LIST=[1],
-        alignment_constant=0.9,
-    )
-
-
-def select_config(experiment_type: str) -> ExperimentConfig:
-    """Return the ExperimentConfig for the requested type (general | commuting)."""
-    if experiment_type == "general":
-        return config_general()
-    if experiment_type == "commuting":
-        return config_commuting()
-    raise ValueError(f"Unknown experiment type: {experiment_type}")
-
-
-# ── Generic random systems (current experiment; the configs above are legacy) ─
-
-GENERAL_SYSTEMS_HINF_TOL_GAMMA = 1e-4
-GENERAL_SYSTEMS_REQUIRE_STABLE = True
-GENERAL_SYSTEMS_RESULTS_DIR = "general_systems_results"
-
-
-def general_systems_search_kwargs(tol_gamma: float = GENERAL_SYSTEMS_HINF_TOL_GAMMA,
-                                  require_stable: bool = GENERAL_SYSTEMS_REQUIRE_STABLE) -> dict:
-    """Gamma-search kwargs for the general-systems experiment."""
-    kwargs = hinf_search_kwargs()
-    kwargs.update(tol_rel=tol_gamma, require_closed_loop_stable=require_stable)
-    return kwargs
+# Gamma search for K_safe (core.solvers). The gamma tolerance is absolute for gamma < 1.
+HINF_SEARCH = dict(
+    gamma_floor=1e-2,
+    gamma_cap=1e5,
+    bracket_factor=10.0,
+    tol_rel=1e-4,
+    max_bisect=100,
+    tol_p=1e-6,
+    maxit_p=500,
+    require_closed_loop_stable=True,
+)
 
 
 @dataclass
-class GeneralSystemsConfig:
+class Config:
     dims: List[int] = field(default_factory=lambda: [4, 8])
-    norm_A_list: List[float] = field(default_factory=lambda: [0.1, 0.3, 0.5, 0.7])
-    norm_B_list: List[float] = field(default_factory=lambda: [0.3, 0.6, 0.9])
-    norm_Rinv_list: List[float] = field(default_factory=lambda: [1.0, 2.0])
+    norm_A: List[float] = field(default_factory=lambda: [0.1, 0.3, 0.5, 0.7])
+    norm_B: List[float] = field(default_factory=lambda: [0.3, 0.6, 0.9])
+    norm_Rinv: List[float] = field(default_factory=lambda: [1.0, 2.0])
     norm_D: float = 1.0
-    n_seeds: int = N_SEEDS
-    base_seed: int = BASE_SEED
-    rank_one_epsilons: List[float] = field(default_factory=lambda: [1e-3, 1e-2])
-    q_min_eig_lqr: float = Q_MIN_EIG_LQR
-    q_min_eig_hinf: float = Q_MIN_EIG_HINF
-    tasks_per_batch: int = 0  # 0 means num_Q_for_dim(m)
-    block_size: int = 2000
+    n_seeds: int = 5
+    base_seed: int = 42
+    rank_one_eps: List[float] = field(default_factory=lambda: [1e-3, 1e-2])
+    q_min_eig: float = 0.1  # minimum eigenvalue of the first task batch
+    tasks_per_batch: int = 0  # 0 means 100 m^2
+    block_size: int = 2000  # pairwise distances are computed in blocks of this size
 
     def n_per_batch(self, m: int) -> int:
-        return self.tasks_per_batch if self.tasks_per_batch > 0 else num_Q_for_dim(m)
+        return self.tasks_per_batch or 100 * m ** 2

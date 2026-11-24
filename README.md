@@ -35,13 +35,11 @@ The following commands estimate the Lipschitz constants of the safe and unsafe c
 
 ```
 cd linear_lqr/lipschitz_experiment
-python run_general_systems.py --out-dir <dir> --workers <n>   # resumable, about 34 core-hours
-python collect_general_systems.py --out-dir <dir>             # -> general_systems_results/general_systems_m={4,8}.csv
-python summarize_general_systems.py                           # checks and headline numbers
-python plot_general_systems.py                                # -> figures/general_systems_{ratio,breakdown_m=4,breakdown_m=8}.{pdf,png}
+python run_experiment.py --out-dir <dir> --workers <n>   # resumable, about 34 core-hours
+python analyze.py --out-dir <dir>                        # -> results/ (CSVs, checks) and figures/
 ```
 
-Finished systems are skipped on restart, and several machines sharing `<dir>` can work through the same grid. Add `--dims 4` to run a single dimension.
+Finished systems are skipped on restart. Add `--dims 4` to run a single dimension.
 
 ### 1.2 Imitation Learning (Table 1, top rows)
 
